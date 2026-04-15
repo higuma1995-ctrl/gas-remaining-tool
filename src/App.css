@@ -126,7 +126,6 @@ input[type='number'] {
   stroke: #dc2626;
   stroke-width: 4;
   stroke-linecap: round;
-  transition: x2 120ms ease, y2 120ms ease;
 }
 
 .gauge-center {

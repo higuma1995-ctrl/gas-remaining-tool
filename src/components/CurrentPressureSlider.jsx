@@ -1,3 +1,5 @@
+import { useRef } from 'react'
+
 import UnitToggle from './UnitToggle'
 
 function clamp(number, min, max) {
@@ -15,7 +17,15 @@ function formatTickValue(value, unit) {
   return Number(value).toFixed(0)
 }
 
+function getTickValues(max, unit) {
+  const baseTicks = unit === 'MPa' ? [0, 5, 10, 15] : [0, 50, 100, 150]
+  const visibleTicks = baseTicks.filter((tick) => tick >= 0 && tick < max)
+
+  return [...visibleTicks, max]
+}
+
 function CurrentPressureSlider({ unit, value, max, step, onChange, onUnitChange }) {
+  const activePointerIdRef = useRef(null)
   const numericValue = Number(value)
   const ratio = max > 0 ? clamp(numericValue / max, 0, 1) : 0
   const angle = 180 - ratio * 180
@@ -26,6 +36,7 @@ function CurrentPressureSlider({ unit, value, max, step, onChange, onUnitChange 
   const needleX = centerX + needleLength * Math.cos(radians)
   const needleY = centerY - needleLength * Math.sin(radians)
   const display = unit === 'MPa' ? numericValue.toFixed(1) : numericValue.toFixed(0)
+  const tickValues = getTickValues(max, unit)
 
   const emitValue = (nextValue) => {
     const clampedValue = clamp(nextValue, 0, max)
@@ -36,6 +47,7 @@ function CurrentPressureSlider({ unit, value, max, step, onChange, onUnitChange 
   }
 
   const updateFromPointer = (event) => {
+    event.preventDefault()
     const bounds = event.currentTarget.getBoundingClientRect()
     const x = ((event.clientX - bounds.left) / bounds.width) * 240
     const y = ((event.clientY - bounds.top) / bounds.height) * 140
@@ -75,18 +87,32 @@ function CurrentPressureSlider({ unit, value, max, step, onChange, onUnitChange 
           aria-valuetext={`${display}${unit}`}
           onKeyDown={handleKeyDown}
           onPointerDown={(event) => {
+            activePointerIdRef.current = event.pointerId
             event.currentTarget.setPointerCapture(event.pointerId)
             updateFromPointer(event)
           }}
           onPointerMove={(event) => {
-            if (event.buttons === 1) {
+            if (activePointerIdRef.current === event.pointerId) {
               updateFromPointer(event)
+            }
+          }}
+          onPointerUp={(event) => {
+            activePointerIdRef.current = null
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+              event.currentTarget.releasePointerCapture(event.pointerId)
+            }
+          }}
+          onPointerCancel={(event) => {
+            activePointerIdRef.current = null
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+              event.currentTarget.releasePointerCapture(event.pointerId)
             }
           }}
         >
           <path className="gauge-arc" d="M 24 118 A 96 96 0 0 1 216 118" />
           <path className="gauge-arc-fill" d="M 24 118 A 96 96 0 0 1 216 118" />
-          {[0, 0.25, 0.5, 0.75, 1].map((tick) => {
+          {tickValues.map((tickValue) => {
+            const tick = max > 0 ? tickValue / max : 0
             const tickAngle = 180 - tick * 180
             const tickRadians = (tickAngle * Math.PI) / 180
             const outerX = centerX + 96 * Math.cos(tickRadians)
@@ -95,9 +121,8 @@ function CurrentPressureSlider({ unit, value, max, step, onChange, onUnitChange 
             const innerY = centerY - 84 * Math.sin(tickRadians)
             const labelX = centerX + 108 * Math.cos(tickRadians)
             const labelY = centerY - 108 * Math.sin(tickRadians) + 4
-            const tickValue = tick === 1 ? max : max * tick
             return (
-              <g key={tick}>
+              <g key={tickValue}>
                 <line
                   className="gauge-tick"
                   x1={innerX}
@@ -109,7 +134,7 @@ function CurrentPressureSlider({ unit, value, max, step, onChange, onUnitChange 
                   className="gauge-tick-label"
                   x={labelX}
                   y={labelY}
-                  textAnchor={tick === 0 ? 'start' : tick === 1 ? 'end' : 'middle'}
+                  textAnchor={tickValue === 0 ? 'start' : tickValue === max ? 'end' : 'middle'}
                 >
                   {formatTickValue(tickValue, unit)}
                 </text>
