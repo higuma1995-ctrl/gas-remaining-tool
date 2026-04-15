@@ -4,7 +4,6 @@ import CurrentPressureSlider from './components/CurrentPressureSlider'
 import FillPressureInput from './components/FillPressureInput'
 import FlowRateInput from './components/FlowRateInput'
 import ResultDisplay from './components/ResultDisplay'
-import UnitToggle from './components/UnitToggle'
 import VolumeInput from './components/VolumeInput'
 
 const STORAGE_KEY = 'grt_inputs'
@@ -13,10 +12,10 @@ const FLOW_PRESETS = [0.25, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0]
 
 const DEFAULT_INPUTS = {
   unit: 'MPa',
-  volume: '',
+  volume: '2.0',
   fillPressure: 14.7,
   currentPressure: 0,
-  flowRate: '',
+  flowRate: '0.5',
 }
 
 function getFillPressureForUnit(fillPressure, unit) {
@@ -211,8 +210,6 @@ function App() {
         <h1>Gas Remaining Tool</h1>
       </header>
 
-      <UnitToggle unit={inputs.unit} onChange={handleUnitChange} />
-
       {restoreNotice && <p className="restore-notice">前回の値を読み込みました</p>}
 
       <CurrentPressureSlider
@@ -221,6 +218,7 @@ function App() {
         max={sliderMax}
         step={sliderStep}
         onChange={handleCurrentPressureChange}
+        onUnitChange={handleUnitChange}
       />
 
       <VolumeInput

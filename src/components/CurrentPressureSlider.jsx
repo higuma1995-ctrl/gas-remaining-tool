@@ -1,3 +1,5 @@
+import UnitToggle from './UnitToggle'
+
 function clamp(number, min, max) {
   return Math.min(Math.max(number, min), max)
 }
@@ -6,7 +8,14 @@ function roundToStep(number, step) {
   return Math.round(number / step) * step
 }
 
-function CurrentPressureSlider({ unit, value, max, step, onChange }) {
+function formatTickValue(value, unit) {
+  if (unit === 'MPa') {
+    return Number(value).toFixed(1)
+  }
+  return Number(value).toFixed(0)
+}
+
+function CurrentPressureSlider({ unit, value, max, step, onChange, onUnitChange }) {
   const numericValue = Number(value)
   const ratio = max > 0 ? clamp(numericValue / max, 0, 1) : 0
   const angle = 180 - ratio * 180
@@ -84,15 +93,27 @@ function CurrentPressureSlider({ unit, value, max, step, onChange }) {
             const outerY = centerY - 96 * Math.sin(tickRadians)
             const innerX = centerX + 84 * Math.cos(tickRadians)
             const innerY = centerY - 84 * Math.sin(tickRadians)
+            const labelX = centerX + 108 * Math.cos(tickRadians)
+            const labelY = centerY - 108 * Math.sin(tickRadians) + 4
+            const tickValue = tick === 1 ? max : max * tick
             return (
-              <line
-                key={tick}
-                className="gauge-tick"
-                x1={innerX}
-                y1={innerY}
-                x2={outerX}
-                y2={outerY}
-              />
+              <g key={tick}>
+                <line
+                  className="gauge-tick"
+                  x1={innerX}
+                  y1={innerY}
+                  x2={outerX}
+                  y2={outerY}
+                />
+                <text
+                  className="gauge-tick-label"
+                  x={labelX}
+                  y={labelY}
+                  textAnchor={tick === 0 ? 'start' : tick === 1 ? 'end' : 'middle'}
+                >
+                  {formatTickValue(tickValue, unit)}
+                </text>
+              </g>
             )
           })}
           <line
@@ -103,16 +124,13 @@ function CurrentPressureSlider({ unit, value, max, step, onChange }) {
             y2={needleY}
           />
           <circle className="gauge-center" cx={centerX} cy={centerY} r="8" />
-          <text className="gauge-min" x="24" y="136">
-            0
-          </text>
-          <text className="gauge-max" x="216" y="136">
-            {unit === 'MPa' ? Number(max).toFixed(1) : Number(max).toFixed(0)}
-          </text>
         </svg>
         <p className="gauge-value">
           {display}{unit}
         </p>
+        <div className="unit-toggle-inline">
+          <UnitToggle unit={unit} onChange={onUnitChange} />
+        </div>
       </div>
     </section>
   )
