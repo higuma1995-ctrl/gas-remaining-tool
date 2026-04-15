@@ -47,17 +47,17 @@ function isAllowedFillPressure(value) {
 
 function loadInitialInputs() {
   if (typeof window === 'undefined') {
-    return DEFAULT_INPUTS
+    return { inputs: DEFAULT_INPUTS, restored: false }
   }
 
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) {
-      return DEFAULT_INPUTS
+      return { inputs: DEFAULT_INPUTS, restored: false }
     }
     const parsed = JSON.parse(raw)
     if (!parsed || typeof parsed !== 'object') {
-      return DEFAULT_INPUTS
+      return { inputs: DEFAULT_INPUTS, restored: false }
     }
 
     const unit = parsed.unit === 'kgf/cm²' ? 'kgf/cm²' : 'MPa'
@@ -78,16 +78,21 @@ function loadInitialInputs() {
         ? ''
         : String(Math.max(Number(parsed.flowRate), 0) || '')
 
-    return { unit, volume, fillPressure, currentPressure, flowRate }
+    return {
+      inputs: { unit, volume, fillPressure, currentPressure, flowRate },
+      restored: true,
+    }
   } catch {
-    return DEFAULT_INPUTS
+    return { inputs: DEFAULT_INPUTS, restored: false }
   }
 }
 
-const INITIAL_INPUTS = loadInitialInputs()
+const INITIAL_STATE = loadInitialInputs()
+const INITIAL_INPUTS = INITIAL_STATE.inputs
 
 function App() {
   const [inputs, setInputs] = useState(INITIAL_INPUTS)
+  const [restoreNotice, setRestoreNotice] = useState(INITIAL_STATE.restored)
   const [volumePreset, setVolumePreset] = useState(() => {
     const parsedVolume = Number(INITIAL_INPUTS.volume)
     return VOLUME_PRESETS.includes(parsedVolume) ? parsedVolume : null
@@ -104,6 +109,18 @@ function App() {
       // ignore storage save errors by spec
     }
   }, [inputs])
+
+  useEffect(() => {
+    if (!restoreNotice) {
+      return undefined
+    }
+
+    const timerId = window.setTimeout(() => {
+      setRestoreNotice(false)
+    }, 3000)
+
+    return () => window.clearTimeout(timerId)
+  }, [restoreNotice])
 
   const sliderMax = getFillPressureForUnit(inputs.fillPressure, inputs.unit)
   const sliderStep = inputs.unit === 'MPa' ? 0.1 : 1
@@ -133,9 +150,9 @@ function App() {
     const ratio = fillPressureForUnit > 0 ? inputs.currentPressure / fillPressureForUnit : 0
 
     let status = 'danger'
-    if (ratio > 0.5) {
+    if (ratio > 0.3) {
       status = 'normal'
-    } else if (ratio > 0.3) {
+    } else if (ratio >= 0.2) {
       status = 'warning'
     }
 
@@ -196,6 +213,16 @@ function App() {
 
       <UnitToggle unit={inputs.unit} onChange={handleUnitChange} />
 
+      {restoreNotice && <p className="restore-notice">前回の値を読み込みました</p>}
+
+      <CurrentPressureSlider
+        unit={inputs.unit}
+        value={inputs.currentPressure}
+        max={sliderMax}
+        step={sliderStep}
+        onChange={handleCurrentPressureChange}
+      />
+
       <VolumeInput
         value={inputs.volume}
         selectedPreset={volumePreset}
@@ -213,14 +240,6 @@ function App() {
         unit={inputs.unit}
         fillPressure={inputs.fillPressure}
         onChange={handleFillPressureChange}
-      />
-
-      <CurrentPressureSlider
-        unit={inputs.unit}
-        value={inputs.currentPressure}
-        max={sliderMax}
-        step={sliderStep}
-        onChange={handleCurrentPressureChange}
       />
 
       <FlowRateInput

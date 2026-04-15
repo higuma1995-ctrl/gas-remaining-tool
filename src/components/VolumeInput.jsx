@@ -1,5 +1,9 @@
 const VOLUME_PRESETS = [1.1, 2.0, 2.8, 3.4, 10]
 
+function formatVolumePreset(preset) {
+  return preset === 10 ? '10L' : `${preset.toFixed(1)}L`
+}
+
 function VolumeInput({ value, selectedPreset, onPresetSelect, onManualChange }) {
   return (
     <section className="card">
@@ -12,7 +16,7 @@ function VolumeInput({ value, selectedPreset, onPresetSelect, onManualChange }) 
             className={selectedPreset === preset ? 'selected' : ''}
             onClick={() => onPresetSelect(preset)}
           >
-            {preset.toFixed(1)}L
+            {formatVolumePreset(preset)}
           </button>
         ))}
       </div>

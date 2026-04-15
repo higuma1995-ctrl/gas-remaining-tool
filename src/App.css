@@ -20,6 +20,16 @@
   text-align: center;
 }
 
+.restore-notice {
+  margin: 0;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
+
 h2 {
   margin: 0 0 8px;
   font-size: 1rem;
@@ -61,20 +71,71 @@ input[type='number'] {
   font-size: 0.9rem;
 }
 
-.slider-row {
+.gauge-row {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 12px;
 }
 
-input[type='range'] {
-  width: 100%;
+.pressure-gauge {
+  width: min(100%, 360px);
+  height: auto;
+  cursor: pointer;
+  touch-action: none;
 }
 
-.slider-value {
-  min-width: 80px;
+.pressure-gauge:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.gauge-arc {
+  fill: none;
+  stroke: #e5e7eb;
+  stroke-width: 18;
+  stroke-linecap: round;
+}
+
+.gauge-arc-fill {
+  fill: none;
+  stroke: #9ca3af;
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+
+.gauge-tick {
+  stroke: #4b5563;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.gauge-needle {
+  stroke: #dc2626;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: x2 120ms ease, y2 120ms ease;
+}
+
+.gauge-center {
+  fill: #111827;
+}
+
+.gauge-min,
+.gauge-max {
+  fill: #4b5563;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.gauge-max {
+  text-anchor: end;
+}
+
+.gauge-value {
   margin: 0;
-  text-align: right;
+  font-size: 1.25rem;
   font-weight: 700;
 }
 
@@ -122,12 +183,7 @@ input[type='range'] {
 }
 
 @media (max-width: 640px) {
-  .slider-row {
-    flex-direction: column;
+  .gauge-row {
     align-items: stretch;
-  }
-
-  .slider-value {
-    text-align: left;
   }
 }

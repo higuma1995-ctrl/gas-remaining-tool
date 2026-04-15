@@ -1,20 +1,116 @@
+function clamp(number, min, max) {
+  return Math.min(Math.max(number, min), max)
+}
+
+function roundToStep(number, step) {
+  return Math.round(number / step) * step
+}
+
 function CurrentPressureSlider({ unit, value, max, step, onChange }) {
-  const display = unit === 'MPa' ? Number(value).toFixed(1) : Number(value).toFixed(0)
+  const numericValue = Number(value)
+  const ratio = max > 0 ? clamp(numericValue / max, 0, 1) : 0
+  const angle = 180 - ratio * 180
+  const radians = (angle * Math.PI) / 180
+  const centerX = 120
+  const centerY = 118
+  const needleLength = 78
+  const needleX = centerX + needleLength * Math.cos(radians)
+  const needleY = centerY - needleLength * Math.sin(radians)
+  const display = unit === 'MPa' ? numericValue.toFixed(1) : numericValue.toFixed(0)
+
+  const emitValue = (nextValue) => {
+    const clampedValue = clamp(nextValue, 0, max)
+    const normalized =
+      unit === 'MPa' ? clampedValue.toFixed(1) : String(Math.round(clampedValue))
+
+    onChange(normalized)
+  }
+
+  const updateFromPointer = (event) => {
+    const bounds = event.currentTarget.getBoundingClientRect()
+    const x = ((event.clientX - bounds.left) / bounds.width) * 240
+    const y = ((event.clientY - bounds.top) / bounds.height) * 140
+    const pointerAngle = Math.atan2(centerY - y, x - centerX)
+    const degrees = clamp((pointerAngle * 180) / Math.PI, 0, 180)
+    const nextRatio = (180 - degrees) / 180
+    const nextValue = roundToStep(nextRatio * max, step)
+
+    emitValue(nextValue)
+  }
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'ArrowRight' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      emitValue(roundToStep(numericValue + step, step))
+    }
+
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') {
+      event.preventDefault()
+      emitValue(roundToStep(numericValue - step, step))
+    }
+  }
 
   return (
     <section className="card">
       <h2>現在圧力</h2>
-      <div className="slider-row">
-        <input
-          type="range"
-          min="0"
-          max={max}
-          step={step}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
+      <div className="gauge-row">
+        <svg
+          className="pressure-gauge"
+          viewBox="0 0 240 140"
+          role="slider"
+          tabIndex="0"
           aria-label="現在圧力"
-        />
-        <p className="slider-value">
+          aria-valuemin="0"
+          aria-valuemax={max}
+          aria-valuenow={numericValue}
+          aria-valuetext={`${display}${unit}`}
+          onKeyDown={handleKeyDown}
+          onPointerDown={(event) => {
+            event.currentTarget.setPointerCapture(event.pointerId)
+            updateFromPointer(event)
+          }}
+          onPointerMove={(event) => {
+            if (event.buttons === 1) {
+              updateFromPointer(event)
+            }
+          }}
+        >
+          <path className="gauge-arc" d="M 24 118 A 96 96 0 0 1 216 118" />
+          <path className="gauge-arc-fill" d="M 24 118 A 96 96 0 0 1 216 118" />
+          {[0, 0.25, 0.5, 0.75, 1].map((tick) => {
+            const tickAngle = 180 - tick * 180
+            const tickRadians = (tickAngle * Math.PI) / 180
+            const outerX = centerX + 96 * Math.cos(tickRadians)
+            const outerY = centerY - 96 * Math.sin(tickRadians)
+            const innerX = centerX + 84 * Math.cos(tickRadians)
+            const innerY = centerY - 84 * Math.sin(tickRadians)
+            return (
+              <line
+                key={tick}
+                className="gauge-tick"
+                x1={innerX}
+                y1={innerY}
+                x2={outerX}
+                y2={outerY}
+              />
+            )
+          })}
+          <line
+            className="gauge-needle"
+            x1={centerX}
+            y1={centerY}
+            x2={needleX}
+            y2={needleY}
+          />
+          <circle className="gauge-center" cx={centerX} cy={centerY} r="8" />
+          <text className="gauge-min" x="24" y="136">
+            0
+          </text>
+          <text className="gauge-max" x="216" y="136">
+            {unit === 'MPa' ? Number(max).toFixed(1) : Number(max).toFixed(0)}
+          </text>
+        </svg>
+        <p className="gauge-value">
           {display}{unit}
         </p>
       </div>

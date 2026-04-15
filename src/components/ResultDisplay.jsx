@@ -1,7 +1,7 @@
 const RESULT_STYLES = {
-  normal: { label: '● 十分な残量' },
-  warning: { label: '▲ 交換を検討' },
-  danger: { label: '■ 早急に交換' },
+  normal: { label: '● 余裕あり' },
+  warning: { label: '▲ 交換の準備を' },
+  danger: { label: '■ 交換してください' },
 }
 
 function ResultDisplay({ result }) {
