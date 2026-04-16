@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
-import CurrentPressureSlider from './components/CurrentPressureSlider'
+import CurrentPressureGauge from './components/CurrentPressureGauge'
 import FillPressureInput from './components/FillPressureInput'
 import FlowRateInput from './components/FlowRateInput'
 import ResultDisplay from './components/ResultDisplay'
@@ -121,8 +121,8 @@ function App() {
     return () => window.clearTimeout(timerId)
   }, [restoreNotice])
 
-  const sliderMax = getFillPressureForUnit(inputs.fillPressure, inputs.unit)
-  const sliderStep = inputs.unit === 'MPa' ? 0.1 : 1
+  const gaugeMax = getFillPressureForUnit(inputs.fillPressure, inputs.unit)
+  const gaugeStep = inputs.unit === 'MPa' ? 0.1 : 1
 
   const result = useMemo(() => {
     const volume = parsePositive(inputs.volume)
@@ -212,11 +212,11 @@ function App() {
 
       {restoreNotice && <p className="restore-notice">前回の値を読み込みました</p>}
 
-      <CurrentPressureSlider
+      <CurrentPressureGauge
         unit={inputs.unit}
         value={inputs.currentPressure}
-        max={sliderMax}
-        step={sliderStep}
+        max={gaugeMax}
+        step={gaugeStep}
         onChange={handleCurrentPressureChange}
         onUnitChange={handleUnitChange}
       />

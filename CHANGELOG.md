@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 1.1.3 - 2026-04-16
+
+- `CurrentPressureGauge.jsx`へ現在圧力ゲージ実装をリネーム
+- SVG要素に`onTouchStart` / `onTouchMove` / `onTouchEnd`を追加
+- タッチイベントで`preventDefault()`を実行し、ドラッグ中の画面スクロールを抑止
+- マウス操作とタッチ操作で同じ座標計算ロジックを使用
+- documentへの`mousemove` / `mouseup` / `touchmove` / `touchend` / `touchcancel`登録を`useEffect`で管理し、アンマウント時に解除
+- `spec.md`のCHANGELOGをv1.1.3へ更新
+
 ## 1.1.1 - 2026-04-15
 
 - 圧力計ゲージのクリック・ドラッグ・タッチ操作を即時に計算結果へ反映
